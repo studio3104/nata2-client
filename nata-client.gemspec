@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib']
 
-  spec.add_runtime_dependency 'active_support'
+  spec.add_runtime_dependency 'activesupport'
   spec.add_runtime_dependency 'sqlite3'
   spec.add_runtime_dependency 'mysql2-cs-bind'
   spec.add_runtime_dependency 'net-ssh'

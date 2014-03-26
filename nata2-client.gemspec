@@ -3,7 +3,7 @@ lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
-  spec.name          = 'nata-client'
+  spec.name          = 'nata2-client'
   spec.version       = '0.0.1'
   spec.authors       = ['studio3104']
   spec.email         = ['studio3104.com@gmail.com']
@@ -18,6 +18,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_runtime_dependency 'activesupport'
+  spec.add_runtime_dependency 'toml-rb'
   spec.add_runtime_dependency 'sqlite3'
   spec.add_runtime_dependency 'mysql2-cs-bind'
   spec.add_runtime_dependency 'net-ssh'

@@ -29,8 +29,8 @@ module Nata2
         result.empty? ? nil : result.split(' ').first.to_i
       end
 
-      def log_body
-
+      def raw_log_body(start_lines, fetch_lines)
+        ssh_exec("sed -n '#{start_lines},#{fetch_lines}p' #{log_file_path}")
       end
 
       def last_db(lines_previously, command_result: nil) # `command_result` is for test

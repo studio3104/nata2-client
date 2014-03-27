@@ -2,18 +2,18 @@
 fetch_lines_limit = 100000
 
 [default.ssh]
-username = 'studio3104'
-password = 'booooooooo'
-key = '/home/studio3104/.ssh/id_rsa'
-passphrase = ''
+username = "studio3104"
+password = "booooooooo"
+key = "/home/studio3104/.ssh/id_rsa"
+passphrase = ""
 
 [default.mysql]
-username = 'studio3104'
-password = ''
+username = "studio3104"
+password = ""
 port = 3306
 
 # settings per targets
 [host1.ssh]
-username = 'satoshi'
-key = '/home/satoshi/.ssh/id_rsa'
-passphrase = ''
+username = "satoshi"
+key = "/home/satoshi/.ssh/id_rsa"
+passphrase = ""

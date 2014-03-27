@@ -20,21 +20,11 @@ module Nata2
       # 前回と現在の inode と処理済み行数が変わらなければ何もしない
       return if current_status == last_status.select { |k,v| k == :inode || k == :lines }
 
-      # inode が変わってなければ前回の続きから、変わってれば最初から取得する
-      # 前回取得から inode が変わるまでに出力されたログは取って来られない...
-      start_lines = if current_status[:inode] == last_status[:inode]
-                      last_status[:lines]
-                    else
-                      sqlite.execute(
-                        'UPDATE `file_status` SET `inode` = ?, `lines` = ? WHERE `hostname` = ?',
-                        current_status[:inode], 0, hostname
-                      )
-                      0
-                    end
-
       # 前回実行時に最後にどのデータベースでのスロークエリを処理したのか記録されてなかったら
       # start_lines より前の行から use 節か Schema から探してくる
       last_db = last_status[:last_db] ? last_status[:last_db] : slowquery.last_db(start_lines)
+
+      start_lines = determine_fetch_start_lines(current_status, last_status)
 
       raw_slow_logs = slowquery.raw_log_body(start_lines, Config.get(:fetch_lines_limit))
       long_query_time = slowquery.long_query_time
@@ -44,6 +34,20 @@ module Nata2
     end
 
     private
+
+    def determine_fetch_start_lines(current_status, last_status)
+      # inode が変わってなければ前回の続きから、変わってれば最初から取得する
+      # 前回取得から inode が変わるまでに出力されたログは取って来られない...
+      if current_status[:inode] == last_status[:inode]
+        last_status[:lines]
+      else
+        sqlite.execute(
+          'UPDATE `file_status` SET `inode` = ?, `lines` = ? WHERE `hostname` = ?',
+          current_status[:inode], 0, hostname
+        )
+        0
+      end
+    end
 
     # 生ログを意味のある単位に分割、パーズし、nata2 へ POST する
     def process(hostname, last_db, raw_slow_logs, long_query_time, processed_lines)

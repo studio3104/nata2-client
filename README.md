@@ -1,4 +1,4 @@
-# Nata2::Client [![Build Status](https://travis-ci.org/studio3104/nata2-client.png)](https://travis-ci.org/studio3104/nata2-client)
+# Nata2::Client [![Build Status](https://travis-ci.org/studio3104/nata2-client.png)](https://travis-ci.org/studio3104/nata2-client) [![Code Climate](https://codeclimate.com/github/studio3104/nata2-client.png)](https://codeclimate.com/github/studio3104/nata2-client)
 
 TODO: Write a gem description
 

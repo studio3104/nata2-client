@@ -2,7 +2,8 @@ require 'spec_helper'
 require 'nata2/client'
 
 describe Nata2::Client do
-  let(:obj) { Nata2::Client.new }
+  let(:client) { Nata2::Client.new }
+  let(:parser) { Nata2::Client::Parser }
   let(:mysql_raw_slow_logs) {
     <<-EOF
 /usr/local/Cellar/mysql/5.6.12/bin/mysqld, Version: 5.6.12 (Source distribution). started with:
@@ -62,19 +63,19 @@ FROM
 
   describe '#split_raw_slow_logs' do
     context 'MySQL' do
-      let(:split_log) { obj.send(:split_raw_slow_logs, mysql_raw_slow_logs) }
+      let(:split_log) { parser.split_raw_slow_logs(mysql_raw_slow_logs) }
       it { expect(split_log.size).to eq(3) }
     end
     context 'Percona' do
-      let(:split_log) { obj.send(:split_raw_slow_logs, percona_raw_slow_logs) }
+      let(:split_log) { parser.split_raw_slow_logs(percona_raw_slow_logs) }
       it { expect(split_log.size).to eq(2) }
     end
   end
 
   describe '#parse_slow_log' do
     context 'MySQL' do
-      let(:split_log) { obj.send(:split_raw_slow_logs, mysql_raw_slow_logs) }
-      let(:parsed_logs) { split_log.map { |l| obj.send(:parse_slow_log, l) } }
+      let(:split_log) { parser.split_raw_slow_logs(mysql_raw_slow_logs) }
+      let(:parsed_logs) { split_log.map { |l| parser.parse_slow_log(l) } }
 
       it { expect(parsed_logs.size).to eq(3) }
       it do
@@ -99,8 +100,8 @@ FROM
     end
 
     context 'Percona' do
-      let(:split_log) { obj.send(:split_raw_slow_logs, percona_raw_slow_logs) }
-      let(:parsed_logs) { split_log.map { |l| obj.send(:parse_slow_log, l) } }
+      let(:split_log) { parser.split_raw_slow_logs(percona_raw_slow_logs) }
+      let(:parsed_logs) { split_log.map { |l| parser.parse_slow_log(l) } }
 
       it { expect(parsed_logs.size).to eq(2) }
       it do

@@ -19,13 +19,13 @@ module Nata2
         show_variables('slow_query_log_file')
       end
 
-      def log_file_inode(command_result: nil) # `command_result` is for test
-        result = command_result ? command_result : ssh_exec("ls -i #{log_file_path}")
+      def log_file_inode
+        result = ssh_exec("ls -i #{log_file_path}")
         result.empty? ? nil : result.split(' ').first.to_i
       end
 
-      def log_file_lines(command_result: nil) # `command_result` is for test
-        result = command_result ? command_result : ssh_exec("wc -l #{log_file_path}")
+      def log_file_lines
+        result = ssh_exec("wc -l #{log_file_path}")
         result.empty? ? nil : result.split(' ').first.to_i
       end
 
@@ -33,12 +33,8 @@ module Nata2
         ssh_exec("sed -n '#{start_lines},#{fetch_lines}p' #{log_file_path}")
       end
 
-      def last_db(lines_previously, command_result: nil) # `command_result` is for test
-        result = if command_result
-                   command_result
-                 else
-                   ssh_exec("sed -n '0,#{lines_previously}p' #{log_file_path} | egrep '^use|Schema:'")
-                 end
+      def last_db(lines_previously)
+        result = ssh_exec("sed -n '0,#{lines_previously}p' #{log_file_path} | egrep '^use|Schema:'")
         return nil if result.empty?
 
         result = result.split("\n").last

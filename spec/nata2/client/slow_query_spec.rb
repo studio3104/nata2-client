@@ -10,24 +10,32 @@ describe Nata2::Client::SlowLogAggregator do
   end
 
   describe '#log_file_inode' do
+    before do
+      allow(obj).to receive(:log_file_path) {}
+      allow(obj).to receive(:ssh_exec) {command_result}
+    end
     context 'blank result' do
       let(:command_result) { '' }
-      it { expect(obj.log_file_inode(command_result: command_result)).to eq(nil) }
+      it { expect(obj.log_file_inode).to eq(nil) }
     end
     context 'result' do
       let(:command_result) { '707459 slow.log' }
-      it { expect(obj.log_file_inode(command_result: command_result)).to eq(707459) }
+      it { expect(obj.log_file_inode).to eq(707459) }
     end
   end
 
   describe '#log_file_lines' do
+    before do
+      allow(obj).to receive(:log_file_path) {}
+      allow(obj).to receive(:ssh_exec) {command_result}
+    end
     context 'blank result' do
       let(:command_result) { '' }
-      it { expect(obj.log_file_lines(command_result: command_result)).to eq(nil) }
+      it { expect(obj.log_file_lines).to eq(nil) }
     end
     context 'result' do
       let(:command_result) { '564 slow.log' }
-      it { expect(obj.log_file_lines(command_result: command_result)).to eq(564) }
+      it { expect(obj.log_file_lines).to eq(564) }
     end
   end
 
@@ -35,21 +43,26 @@ describe Nata2::Client::SlowLogAggregator do
   end
 
   describe '#last_db' do
+    before do
+      allow(obj).to receive(:log_file_path) {}
+      allow(obj).to receive(:lines_previously) {}
+      allow(obj).to receive(:ssh_exec) {command_result}
+    end
     context 'blank result' do
       let(:command_result) { '' }
-      it { expect(obj.last_db(0, command_result: command_result)).to eq(nil) }
+      it { expect(obj.last_db(0)).to eq(nil) }
     end
     context 'single line result (use)' do
       let(:command_result) { "use sbtest;" }
-      it { expect(obj.last_db(0, command_result: command_result)).to eq('sbtest') }
+      it { expect(obj.last_db(0)).to eq('sbtest') }
     end
     context 'single line result (Schema)' do
       let(:command_result) { "# Thread_id: 41  Schema: sbtest  Last_errno: 0  Killed: 0" }
-      it { expect(obj.last_db(0, command_result: command_result)).to eq('sbtest') }
+      it { expect(obj.last_db(0)).to eq('sbtest') }
     end
     context 'multiple lines results' do
       let(:command_result) { "# Thread_id: 41  Schema: sbtest  Last_errno: 0  Killed: 0\nuse sbtest;" }
-      it { expect(obj.last_db(0, command_result: command_result)).to eq('sbtest') }
+      it { expect(obj.last_db(0)).to eq('sbtest') }
     end
   end
 

@@ -25,13 +25,17 @@ describe Nata2::Client::SlowLogAggregator do
   end
 
   describe '#log_file_lines' do
+    before {
+      allow(obj).to receive(:log_file_path) {}
+      allow(obj).to receive(:ssh_exec) {command_result}
+    }
     context 'blank result' do
       let(:command_result) { '' }
-      it { expect(obj.log_file_lines(command_result: command_result)).to eq(nil) }
+      it { expect(obj.log_file_lines).to eq(nil) }
     end
     context 'result' do
       let(:command_result) { '564 slow.log' }
-      it { expect(obj.log_file_lines(command_result: command_result)).to eq(564) }
+      it { expect(obj.log_file_lines).to eq(564) }
     end
   end
 

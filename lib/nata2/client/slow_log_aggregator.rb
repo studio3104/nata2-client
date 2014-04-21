@@ -24,8 +24,8 @@ module Nata2
         result.empty? ? nil : result.split(' ').first.to_i
       end
 
-      def log_file_lines(command_result: nil) # `command_result` is for test
-        result = command_result ? command_result : ssh_exec("wc -l #{log_file_path}")
+      def log_file_lines
+        result = ssh_exec("wc -l #{log_file_path}")
         result.empty? ? nil : result.split(' ').first.to_i
       end
 

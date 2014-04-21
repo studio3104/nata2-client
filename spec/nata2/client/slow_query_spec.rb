@@ -10,10 +10,10 @@ describe Nata2::Client::SlowLogAggregator do
   end
 
   describe '#log_file_inode' do
-    before {
+    before do
       allow(obj).to receive(:log_file_path) {}
       allow(obj).to receive(:ssh_exec) {command_result}
-    }
+    end
     context 'blank result' do
       let(:command_result) { '' }
       it { expect(obj.log_file_inode).to eq(nil) }
@@ -25,10 +25,10 @@ describe Nata2::Client::SlowLogAggregator do
   end
 
   describe '#log_file_lines' do
-    before {
+    before do
       allow(obj).to receive(:log_file_path) {}
       allow(obj).to receive(:ssh_exec) {command_result}
-    }
+    end
     context 'blank result' do
       let(:command_result) { '' }
       it { expect(obj.log_file_lines).to eq(nil) }
@@ -43,21 +43,26 @@ describe Nata2::Client::SlowLogAggregator do
   end
 
   describe '#last_db' do
+    before do
+      allow(obj).to receive(:log_file_path) {}
+      allow(obj).to receive(:lines_previously) {}
+      allow(obj).to receive(:ssh_exec) {command_result}
+    end
     context 'blank result' do
       let(:command_result) { '' }
-      it { expect(obj.last_db(0, command_result: command_result)).to eq(nil) }
+      it { expect(obj.last_db(0)).to eq(nil) }
     end
     context 'single line result (use)' do
       let(:command_result) { "use sbtest;" }
-      it { expect(obj.last_db(0, command_result: command_result)).to eq('sbtest') }
+      it { expect(obj.last_db(0)).to eq('sbtest') }
     end
     context 'single line result (Schema)' do
       let(:command_result) { "# Thread_id: 41  Schema: sbtest  Last_errno: 0  Killed: 0" }
-      it { expect(obj.last_db(0, command_result: command_result)).to eq('sbtest') }
+      it { expect(obj.last_db(0)).to eq('sbtest') }
     end
     context 'multiple lines results' do
       let(:command_result) { "# Thread_id: 41  Schema: sbtest  Last_errno: 0  Killed: 0\nuse sbtest;" }
-      it { expect(obj.last_db(0, command_result: command_result)).to eq('sbtest') }
+      it { expect(obj.last_db(0)).to eq('sbtest') }
     end
   end
 

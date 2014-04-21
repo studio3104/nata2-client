@@ -108,10 +108,10 @@ module Nata2
 
       def ssh_exec(command)
         result = ''
-        # ssh_client.exec(command) do |channel, stream, data|
-        #   result = data if stream == :stdout
-        # end
-        # ssh_client.loop
+        ssh_client.exec(command) do |channel, stream, data|
+          result = data if stream == :stdout
+        end
+        ssh_client.loop
         result
       end
 

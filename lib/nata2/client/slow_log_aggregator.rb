@@ -19,8 +19,8 @@ module Nata2
         show_variables('slow_query_log_file')
       end
 
-      def log_file_inode(command_result: nil) # `command_result` is for test
-        result = command_result ? command_result : ssh_exec("ls -i #{log_file_path}")
+      def log_file_inode
+        result = ssh_exec("ls -i #{log_file_path}")
         result.empty? ? nil : result.split(' ').first.to_i
       end
 
@@ -112,10 +112,10 @@ module Nata2
 
       def ssh_exec(command)
         result = ''
-        ssh_client.exec(command) do |channel, stream, data|
-          result = data if stream == :stdout
-        end
-        ssh_client.loop
+        # ssh_client.exec(command) do |channel, stream, data|
+        #   result = data if stream == :stdout
+        # end
+        # ssh_client.loop
         result
       end
 

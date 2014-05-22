@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+require 'thor'
+$LOAD_PATH.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
+require 'nata2/client'
+require 'nata2/client/config'
+
+class Nata2::Client::Command < Thor
+  desc 'start', 'run aggregation'
+  option :all, type: :boolean, aliases: 'a', default: true, desc: 'run all hosts specified in config'
+  option :hosts, type: :array, aliases: 'H', desc: 'specify target hosts'
+  def start
+    targets = options[:hosts] || Nata2::Client::Config.get(:targets)
+    #targets.each { |host| Nata2::Client.run(host) }
+    targets.each { |host| p host }
+  end
+end
+Nata2::Client::Command.start(ARGV)

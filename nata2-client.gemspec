@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'sqlite3'
   spec.add_runtime_dependency 'mysql2-cs-bind'
   spec.add_runtime_dependency 'net-ssh'
+  spec.add_runtime_dependency 'thor'
 
   spec.add_development_dependency 'bundler', '~> 1.5'
   spec.add_development_dependency 'rake'

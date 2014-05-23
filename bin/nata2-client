@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require 'thor'
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
-require 'nata2/client'
+require 'nata2/client/runner'
 require 'nata2/client/config'
 
 class Nata2::Client::Command < Thor
@@ -10,8 +10,10 @@ class Nata2::Client::Command < Thor
   option :hosts, type: :array, aliases: 'H', desc: 'specify target hosts'
   def start
     targets = options[:hosts] || Nata2::Client::Config.get(:targets)
-    #targets.each { |host| Nata2::Client.run(host) }
-    targets.each { |host| p host }
+    targets.each do |host|
+      client = Nata2::Client::Runner.new(host)
+      client.run
+    end
   end
 end
 Nata2::Client::Command.start(ARGV)

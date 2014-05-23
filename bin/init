@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+require 'thor'
+$LOAD_PATH.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
+require 'nata2/client/db'
+
+class Nata2::Client::Command < Thor
+  default_command :start
+  desc 'start', 'initialize sqlite3 database'
+  def start
+    db = Nata2::Client::DB.new
+    db.init
+  end
+end
+Nata2::Client::Command.start(ARGV)

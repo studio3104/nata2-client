@@ -1,9 +1,9 @@
+require 'nata2/client'
 require 'net/ssh'
 require 'mysql2-cs-bind'
 
 module Nata2
   class Client
-    class InvalidBindVariablesError < StandardError; end
     class SlowLogAggregator
       def initialize(hostname, connection_settings)
         @hostname = hostname
@@ -30,12 +30,12 @@ module Nata2
       end
 
       def raw_log_body(start_lines, fetch_lines)
-        ssh_exec("sed -n '#{start_lines},#{fetch_lines}p' #{log_file_path}")
+        ssh_exec("sed -n '#{start_lines},#{start_lines + fetch_lines}p' #{log_file_path}")
       end
 
       def last_db(lines_previously)
-        result = ssh_exec("sed -n '0,#{lines_previously}p' #{log_file_path} | egrep '^use|Schema:'")
-        return nil if result.empty?
+        result = ssh_exec("sed -n '1,#{lines_previously}p' #{log_file_path} | egrep '^use|Schema:'")
+        return nil unless result
 
         result = result.split("\n").last
         if m = result.match(/^use (\w+);/)
@@ -54,7 +54,7 @@ module Nata2
 
       def validate_sql_components(*components)
         invalids = components.flatten.select { |c| !c.match(/\A[0-9a-zA-Z_\-]+\z/) }
-        raise InvalidBindVariablesError, "invalid bind variable - #{invalids}" unless invalids.empty?
+        raise Error, "invalid bind variable - #{invalids}" unless invalids.empty?
         true
       end
 
@@ -97,26 +97,42 @@ module Nata2
         if @mysql_client && @mysql_client.ping
           @mysql_client
         else
-          @mysql_client = Mysql2::Client.new(
-            host: @hostname,
-            port: mysql_config[:port],
-            username: mysql_config[:username],
-            password: mysql_config[:password],
-          )
+          begin
+            @mysql_client = Mysql2::Client.new(
+              host: @hostname,
+              port: mysql_config[:port],
+              username: mysql_config[:username],
+              password: mysql_config[:password],
+            )
+          rescue Mysql2::Error => e
+            raise Error, e.message
+          end
         end
       end
 
       def ssh_exec(command)
-        result = ''
+        result = {}
         ssh_client.exec(command) do |channel, stream, data|
-          result = data if stream == :stdout
+          result[:stdout] = data if stream == :stdout
+          result[:stderr] = data if data != '' && stream == :stderr
         end
         ssh_client.loop
-        result
+
+        raise Error, "#{command} #{result[:stderr]}" if result[:stderr]
+        result[:stdout]
       end
 
       def ssh_config
-        @config[:ssh]
+        conf = @config[:ssh]
+        options = {}
+        conf.each do |title, value|
+          next if title == :username
+          options[title] = value
+        end
+        {
+          username: conf[:username],
+          options: options
+        }
       end
 
       def ssh_client

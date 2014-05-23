@@ -1,5 +1,6 @@
 require 'toml'
 require 'active_support/core_ext'
+$LOAD_PATH.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
 
 module Nata2
   class Client
@@ -10,6 +11,10 @@ module Nata2
       end
 
       private
+
+      def targets
+        config[:targets]
+      end
 
       def fetch_lines_limit
         config[:default][:fetch_lines_limit]
@@ -26,12 +31,8 @@ module Nata2
         result.select { |k,v| k == :ssh || k == :mysql }
       end
 
-      def test
-        'test'
-      end
-
       def config
-        @config ||= TOML.load_file(File.expand_path('../../..') + '/config.sample.toml').deep_symbolize_keys
+        @config ||= TOML.load_file(File.expand_path(File.dirname(__FILE__) + '/../../..') + '/config.sample.toml').deep_symbolize_keys
       end
     end
   end

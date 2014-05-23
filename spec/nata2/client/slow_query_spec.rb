@@ -49,7 +49,7 @@ describe Nata2::Client::SlowLogAggregator do
       allow(obj).to receive(:ssh_exec) {command_result}
     end
     context 'blank result' do
-      let(:command_result) { '' }
+      let(:command_result) { nil }
       it { expect(obj.last_db(0)).to eq(nil) }
     end
     context 'single line result (use)' do
@@ -84,7 +84,7 @@ describe Nata2::Client::SlowLogAggregator do
         expect {
           obj.send(:validate_sql_components, invalid_sql_component)
         }.to(
-          raise_error(Nata2::Client::InvalidBindVariablesError)
+          raise_error(Nata2::Client::Error)
         )
       end
 
@@ -96,7 +96,7 @@ describe Nata2::Client::SlowLogAggregator do
             invalid_sql_component
           )
         }.to(
-          raise_error(Nata2::Client::InvalidBindVariablesError)
+          raise_error(Nata2::Client::Error)
         )
       end
     end

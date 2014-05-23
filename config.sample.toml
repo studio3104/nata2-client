@@ -1,19 +1,24 @@
+targets = [
+  "host1", "host2"
+]
+
 [default]
-fetch_lines_limit = 100000
+fetch_lines_limit = 9
 
 [default.ssh]
-username = "studio3104"
-password = "booooooooo"
-key = "/home/studio3104/.ssh/id_rsa"
+username = "root"
+password = "vagrant"
+keys = [ "/home/studio3104/.ssh/id_rsa" ]
 passphrase = ""
+port = 20022
 
 [default.mysql]
-username = "studio3104"
-password = ""
-port = 3306
+username = "nata"
+password = "nata"
+port = 13306
 
 # settings per targets
 [host1.ssh]
 username = "satoshi"
-key = "/home/satoshi/.ssh/id_rsa"
+keys = [ "/home/satoshi/.ssh/id_rsa" ]
 passphrase = ""

@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'nata2/client'
+require 'nata2/client/runner'
 
 describe Nata2::Client do
-  let(:client) { Nata2::Client.new }
+  let(:client) { Nata2::Client::Runner.new }
   let(:parser) { Nata2::Client::Parser }
   let(:mysql_raw_slow_logs) {
     <<-EOF

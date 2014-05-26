@@ -43,6 +43,8 @@ class Nata2::Client
       @slowquery.close_connections
 
       process(last_db, raw_slow_logs, long_query_time, start_lines - 1)
+    rescue Nata2::Client::Error => e
+      logger.error(@hostname) { %Q{#{e.message}} }
     end
 
     private

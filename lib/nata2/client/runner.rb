@@ -1,4 +1,7 @@
 require 'sqlite3'
+require 'net/http'
+require 'uri'
+require 'json'
 require 'active_support/core_ext'
 require 'nata2/client'
 require 'nata2/client/db'
@@ -8,8 +11,8 @@ require 'nata2/client/config'
 
 class Nata2::Client
   class Runner
-    attr_reader :hostname, :slowquery
-    def initialize(hostname)
+    def initialize(servicename, hostname)
+      @servicename = servicename
       @hostname = hostname
       @slowquery = SlowLogAggregator.new(hostname, Config.get(:connection_settings, hostname))
     end
@@ -18,27 +21,27 @@ class Nata2::Client
       require 'awesome_print'
       # 前回実行時のファイルステータスと、現在のファイルステータスを取得
       current_status = {
-        inode: slowquery.log_file_inode,
-        lines: slowquery.log_file_lines,
+        inode: @slowquery.log_file_inode,
+        lines: @slowquery.log_file_lines,
       }
 
-      require 'awesome_print'
       last_status = find_or_create_file_status(current_status)
 
       # 前回と現在の inode と処理済み行数が変わらなければ何もしない
-      return if current_status == last_status.select { |k,v| k == :inode || k == :lines }
-      ap current_status
-      ap last_status.select { |k,v| k == :inode || k == :lines }
+      if current_status == last_status.select { |k,v| k == :inode || k == :lines }
+        logger.info(@hostname) { %Q{No changed. #{JSON.generate(current_status)}} } 
+        return
+      end
 
       start_lines = determine_fetch_start_lines(current_status, last_status)
 
       # 前回実行時に最後にどのデータベースでのスロークエリを処理したのか記録されてなかったら
       # start_lines より前の行から use 節か Schema から探してくる
-      last_db = last_status[:last_db] ? last_status[:last_db] : slowquery.last_db(start_lines)
+      last_db = last_status[:last_db] ? last_status[:last_db] : @slowquery.last_db(start_lines)
 
-      raw_slow_logs = slowquery.raw_log_body(start_lines, Config.get(:fetch_lines_limit) - 1)
-      long_query_time = slowquery.long_query_time
-      slowquery.close_connections
+      raw_slow_logs = @slowquery.raw_log_body(start_lines, Config.get(:fetch_lines_limit) - 1)
+      long_query_time = @slowquery.long_query_time
+      @slowquery.close_connections
 
       process(last_db, raw_slow_logs, long_query_time, start_lines - 1)
     end
@@ -53,7 +56,7 @@ class Nata2::Client
       else
         sqlite.execute(
           'UPDATE `file_status` SET `inode` = ?, `lines` = ? WHERE `hostname` = ?',
-          current_status[:inode], 0, hostname
+          current_status[:inode], 0, @hostname
         )
         1
       end
@@ -78,17 +81,16 @@ class Nata2::Client
           last_db = parsed_slow_log[:db]
 
           ap parsed_slow_log.merge(long_query_time: long_query_time)
-ap          processed_lines
-#          post_nata2(parsed_slow_log.merge(long_query_time: long_query_time))
+          post_nata2(parsed_slow_log.merge(long_query_time: long_query_time))
 
           # 例外が起きた場合に、続きを次回実行時に順延させるために処理済みの行数を更新しながら行う
           sqlite.execute(
             'UPDATE `file_status` SET `lines` = ?, `last_db` = ?, `updated_at` = ? WHERE `hostname` = ?',
-            processed_lines, last_db, Time.now.to_i, hostname
+            processed_lines, last_db, Time.now.to_i, @hostname
           )
         end
-      #rescue #!!atode!! 例外クラス指定する
-        #logger.error
+      rescue => e
+        logger.error(@hostname) { "#{e.message} (#{e.class.to_s})" }
       ensure
         sqlite.commit
         sqlite.close
@@ -96,7 +98,7 @@ ap          processed_lines
     end
 
     def find_or_create_file_status(current_status)
-      last_status = sqlite.execute('SELECT * FROM `file_status` WHERE `hostname` = ?', hostname).first
+      last_status = sqlite.execute('SELECT * FROM `file_status` WHERE `hostname` = ?', @hostname).first
 
       # 前回情報がなかったら新規のホストとみなし、現在のファイルステータスを登録
       last_status = unless last_status.blank?
@@ -104,12 +106,12 @@ ap          processed_lines
                     else
                       sqlite.execute(
                         'INSERT INTO `file_status` (`hostname`, `lines`, `inode`) VALUES (?, ?, ?)',
-                        hostname,
+                        @hostname,
                         current_status[:lines],
                         current_status[:inode],
                       )
 
-                      sqlite.execute('SELECT * FROM `file_status` WHERE `hostname` = ?', hostname).first
+                      sqlite.execute('SELECT * FROM `file_status` WHERE `hostname` = ?', @hostname).first
                     end
 
       last_status.symbolize_keys
@@ -120,13 +122,39 @@ ap          processed_lines
     end
 
     def logger
-      @logger ||= Logger.new()
+      @logger ||= Logger.new(Dir.tmpdir + '/nata-client.log', 10)
     end
 
     def post_nata2(slowlog)
-      # 200 じゃなかったら例外?
-      # 400 だったらスキップ?
-      # とか 200 以外のときにどうするかちゃんと決めて実装する
+      nataserver = Config.get(:nataserver)
+      databasename = slowlog.delete(:db)
+      api = URI.parse(%Q{http://#{nataserver[:fqdn]}:#{nataserver[:port]}/api/1/#{@servicename}/#{@hostname}/#{databasename}})
+      request = Net::HTTP::Post.new(api.path)
+      request.set_form_data(slowlog)
+      http = Net::HTTP.new(api.host, api.port)
+      response = http.start.request(request)
+
+      if !response
+        raise Nata::Client::Error, 'No response from Nata server'
+      end
+
+      response_code = response.code.to_i
+      unless [200, 400].include?(response_code)
+        raise Nata::Client::Error, %Q{Nata server returns #{response_code}.}
+      end
+
+      response_body = JSON.parse(response.body)
+      case response_body['error']
+      when 0
+        logger.info(@hostname) { %Q{Post successful. id: #{response_body['data']['id']}} }
+      when 1
+        # ここに該当する場合は、Nata Server 側の Validation で弾かれた場合なので、
+        # 同じロジックで再度 Parse~ しても同じことになる。
+        # そのため、例外を起こさず該当のスロークエリログはスキップするようにした。
+        logger.error(@hostname) { %Q{Failed to post. messages: #{reponse_body['messages']}} }
+      else
+        raise Nata::Client::Error, %Q{Unknown error status: #{response_body['error']}}
+      end
     end
   end
 end

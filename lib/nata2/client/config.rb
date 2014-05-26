@@ -16,6 +16,10 @@ module Nata2
         config[:targets]
       end
 
+      def nataserver
+        config[:nataserver]
+      end
+
       def fetch_lines_limit
         config[:default][:fetch_lines_limit]
       end

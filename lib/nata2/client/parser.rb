@@ -29,7 +29,7 @@ module Nata2
         end
 
         if record = line.match(/^# Time:\s+(.+)/)
-          result[:time] = Time.parse(record[1]).to_i
+          result[:datetime] = Time.parse(record[1]).to_i
           line = raw_slow_log.shift
         end
 
@@ -68,7 +68,7 @@ module Nata2
         end
 
         if record = line.match(/^SET timestamp=(\d+);$/)
-          result[:time] = record[1].to_i
+          result[:datetime] = record[1].to_i
           line = raw_slow_log.shift
         end
 

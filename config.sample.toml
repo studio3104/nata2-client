@@ -3,7 +3,7 @@ service1 = [ "host1", "host2" ]
 service2 = [ "host3", "host4" ]
 
 [nataserver]
-fqdn = "locahost"
+fqdn = "localhost"
 port = 9393
 
 [default]

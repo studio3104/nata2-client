@@ -4,6 +4,7 @@
 .config
 .yardoc
 *.db
+config.toml
 Gemfile.lock
 InstalledFiles
 _yardoc

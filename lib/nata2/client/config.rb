@@ -36,7 +36,7 @@ module Nata2
       end
 
       def config
-        @config ||= TOML.load_file(File.expand_path(File.dirname(__FILE__) + '/../../..') + '/config.sample.toml').deep_symbolize_keys
+        @config ||= TOML.load_file(File.expand_path(File.dirname(__FILE__) + '/../../..') + '/config.toml').deep_symbolize_keys
       end
     end
   end

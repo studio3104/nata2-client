@@ -1,6 +1,10 @@
-targets = [
-  "host1", "host2"
-]
+[targets]
+service1 = [ "host1", "host2" ]
+service2 = [ "host3", "host4" ]
+
+[nataserver]
+fqdn = "locahost"
+port = 9393
 
 [default]
 fetch_lines_limit = 9

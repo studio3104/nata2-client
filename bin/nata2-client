@@ -7,12 +7,36 @@ require 'nata2/client/config'
 class Nata2::Client::Command < Thor
   desc 'start', 'run aggregation'
   option :all, type: :boolean, aliases: 'a', default: true, desc: 'run all hosts specified in config'
-  option :hosts, type: :array, aliases: 'H', desc: 'specify target hosts'
+  option :service, type: :string, aliases: 's', desc: 'specify target service name'
+  option :hosts, type: :array, aliases: 'H', desc: 'specify target host names'
+
   def start
-    targets = options[:hosts] || Nata2::Client::Config.get(:targets)
-    targets.each do |host|
-      client = Nata2::Client::Runner.new(host)
-      client.run
+    service = options[:service]
+    hosts = options[:hosts]
+
+    if service && !hosts || !service && hosts
+      error(<<ERR
+Argument Error:
+  not possible to specify only one of `--service(-s)` or --hosts(-H)\
+
+
+ERR
+)
+      help('start')
+      abort
+    end
+
+    targets = if service && hosts
+                { service => hosts }
+              else
+                Nata2::Client::Config.get(:targets)
+              end
+
+    targets.each do |s, h|
+      h.each do |host|
+        client = Nata2::Client::Runner.new(s, host)
+        client.run
+      end
     end
   end
 end

@@ -18,7 +18,6 @@ class Nata2::Client
     end
 
     def run
-      require 'awesome_print'
       # 前回実行時のファイルステータスと、現在のファイルステータスを取得
       current_status = {
         inode: @slowquery.log_file_inode,

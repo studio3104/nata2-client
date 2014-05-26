@@ -81,17 +81,17 @@ FROM
       it do
         expect(parsed_logs).to eq([
           {
-            time: 1390883951, user: 'user', host: 'localhost',
+            datetime: 1390883951, user: 'user', host: 'localhost',
             query_time: 2.001227, lock_time: 0.0, rows_sent: 1, rows_examined:0,
             sql: 'select sleep(2)'
           },
           {
-            time: 1395761816, user: 'root', host: 'localhost',
+            datetime: 1395761816, user: 'root', host: 'localhost',
             query_time: 10.00114, lock_time: 0.0, rows_sent: 1, rows_examined: 0,
             sql: 'select sleep(10)'
           },
           {
-            time: 1395761831, user: 'root', host: 'localhost',
+            datetime: 1395761831, user: 'root', host: 'localhost',
             query_time: 10.001114, lock_time: 0.0, rows_sent: 1, rows_examined: 0, 
             db: 'mysql', sql: 'select sleep(10)'
           }
@@ -107,7 +107,7 @@ FROM
       it do
         expect(parsed_logs).to eq([
           {
-            time: 1347508701, user: 'root', host: 'localhost',
+            datetime: 1347508701, user: 'root', host: 'localhost',
             thread_id: 45, schema: 'sbtest', last_errno: 0, killed: 0,
             query_time: 34.45236, lock_time: 0.000134, rows_sent: 50, rows_examined: 8800050, rows_affected: 0, rows_read: 50,
             bytes_sent: 3499, tmp_tables: 1, tmp_disk_tables: 1, tmp_table_sizes: 2450800000,
@@ -121,7 +121,7 @@ FROM
             sql: 'SELECT * FROM sbtest ORDER BY RAND() LIMIT 50'
           },
           {
-            time: 1388052422, user: 'user', host: '192.168.10.11',
+            datetime: 1388052422, user: 'user', host: '192.168.10.11',
             thread_id: 9510259, schema: 'sbtest', last_errno: 0, killed: 0,
             query_time: 4.901885, lock_time: 6.5e-05, rows_sent: 8309, rows_examined: 69763781, rows_affected: 0, rows_read: 69763781,
             bytes_sent: 802732,

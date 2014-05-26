@@ -79,7 +79,6 @@ class Nata2::Client
           end
           last_db = parsed_slow_log[:db]
 
-          ap parsed_slow_log.merge(long_query_time: long_query_time)
           post_nata2(parsed_slow_log.merge(long_query_time: long_query_time))
 
           # 例外が起きた場合に、続きを次回実行時に順延させるために処理済みの行数を更新しながら行う

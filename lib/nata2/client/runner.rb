@@ -135,12 +135,12 @@ class Nata2::Client
       response = http.start.request(request)
 
       if !response
-        raise Nata::Client::Error, 'No response from Nata server'
+        raise Nata2::Client::Error, 'No response from Nata server'
       end
 
       response_code = response.code.to_i
       unless [200, 400].include?(response_code)
-        raise Nata::Client::Error, %Q{Nata server returns #{response_code}.}
+        raise Nata2::Client::Error, %Q{Nata server returns #{response_code}.}
       end
 
       response_body = JSON.parse(response.body)
@@ -153,7 +153,7 @@ class Nata2::Client
         # そのため、例外を起こさず該当のスロークエリログはスキップするようにした。
         logger.error(@hostname) { %Q{Failed to post. messages: #{reponse_body['messages']}} }
       else
-        raise Nata::Client::Error, %Q{Unknown error status: #{response_body['error']}}
+        raise Nata2::Client::Error, %Q{Unknown error status: #{response_body['error']}}
       end
     end
   end

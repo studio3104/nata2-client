@@ -111,14 +111,14 @@ module Nata2
       end
 
       def ssh_exec(command)
-        result = {}
+        result = { stdout: '', stderr: '' }
         ssh_client.exec(command) do |channel, stream, data|
-          result[:stdout] = data if stream == :stdout
-          result[:stderr] = data if data != '' && stream == :stderr
+          result[:stdout] += data if stream == :stdout
+          result[:stderr] += data if data != '' && stream == :stderr
         end
         ssh_client.loop
 
-        raise Error, "#{command} #{result[:stderr]}" if result[:stderr]
+        raise Error, "#{command} #{result[:stderr]}" unless result[:stderr] == ''
         result[:stdout]
       end
 

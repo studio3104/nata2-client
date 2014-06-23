@@ -34,15 +34,11 @@ class Nata2::Client
 
       start_lines = determine_fetch_start_lines(current_status, last_status)
 
-      # 前回実行時に最後にどのデータベースでのスロークエリを処理したのか記録されてなかったら
-      # start_lines より前の行から use 節か Schema から探してくる
-      last_db = last_status[:last_db] ? last_status[:last_db] : @slowquery.last_db(start_lines)
-
       raw_slow_logs = @slowquery.raw_log_body(start_lines, Config.get(:fetch_lines_limit) - 1)
       long_query_time = @slowquery.long_query_time
       @slowquery.close_connections
 
-      process(last_db, raw_slow_logs, long_query_time, start_lines - 1)
+      process(last_status[:last_db], raw_slow_logs, long_query_time, start_lines - 1)
     rescue Nata2::Client::Error => e
       logger.error(@hostname) { %Q{#{e.message}} }
     end
@@ -76,7 +72,10 @@ class Nata2::Client
             if parsed_slow_log[:schema]
               parsed_slow_log[:db] = parsed_slow_log[:schema]
             else
-              parsed_slow_log[:db] = last_db
+              # parse されたスロークエリログと、前回実行時の記録から、
+              # 最後にどのデータベースでのスロークエリを処理したのかがわからない場合、
+              # processed_lines より前の行から use 節か Schema から探してくる
+              parsed_slow_log[:db] = last_db ? last_db : @slowquery.last_db(processed_lines)
             end
           end
           last_db = parsed_slow_log[:db]

@@ -150,7 +150,7 @@ class Nata2::Client
         # ここに該当する場合は、Nata Server 側の Validation で弾かれた場合なので、
         # 同じロジックで再度 Parse~ しても同じことになる。
         # そのため、例外を起こさず該当のスロークエリログはスキップするようにした。
-        logger.error(@hostname) { %Q{Failed to post. messages: #{reponse_body['messages']}} }
+        logger.error(@hostname) { %Q{Failed to post. messages: #{response_body['messages']}} }
       else
         raise Nata2::Client::Error, %Q{Unknown error status: #{response_body['error']}}
       end

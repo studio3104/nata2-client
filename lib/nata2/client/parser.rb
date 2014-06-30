@@ -44,7 +44,7 @@ module Nata2
         while line.start_with?('#')
           line = line.sub(/^#\s+/, '')
 
-          # '  ' で split したかったけど、' ' で区切られてる場合もあったからこうした
+          # '  ' で split したかったけど、' ' で区切られてる場合(MacのMySQLで確認)もあったからこうした
           record = line.split(/\s+/).map { |val|
             case val
             when /\:$/
@@ -57,7 +57,22 @@ module Nata2
               val
             end
           }
-          result = result.merge(Hash[*record])
+
+          # # Thread_id: 45  Schema:   Last_errno: 0  Killed: 0
+          # ↑ の Schema みたいに、値がない場合に nil を埋めて対応する
+          begin
+            result = result.merge(Hash[*record])
+          rescue ArgumentError # odd number of arguments for Hash
+            _record = []
+            record.each_with_index do |val, i|
+              _record << val
+              if val.is_a?(Symbol) && record[i+1].is_a?(Symbol)
+                _record << nil
+              end
+            end
+            _record << nil if _record.last.is_a?(Symbol)
+            result = result.merge(Hash[*_record])
+          end
 
           line = raw_slow_log.shift
         end

@@ -61,6 +61,24 @@ FROM
     EOF
   }
 
+  let(:percona_raw_slow_logs_without_Schema) {
+    <<-EOF
+# Time: 120913 12:58:21
+# User@Host: root[root] @ localhost []
+# Thread_id: 45  Schema:   Last_errno: 0  Killed: 0
+# Query_time: 34.452360  Lock_time: 0.000134  Rows_sent: 50  Rows_examined: 8800050  Rows_affected: 0  Rows_read: 50
+# Bytes_sent: 3499  Tmp_tables: 1  Tmp_disk_tables: 1  Tmp_table_sizes: 2450800000
+# InnoDB_trx_id: B08
+# QC_Hit: No  Full_scan: Yes  Full_join: No  Tmp_table: Yes  Tmp_table_on_disk: Yes
+# Filesort: Yes  Filesort_on_disk: Yes  Merge_passes: 202
+#   InnoDB_IO_r_ops: 58994  InnoDB_IO_r_bytes: 966557696  InnoDB_IO_r_wait: 8.327283
+#   InnoDB_rec_lock_wait: 0.000000  InnoDB_queue_wait: 0.000000
+#   InnoDB_pages_distinct: 60281
+SET timestamp=1347508701;
+SELECT * FROM sbtest ORDER BY RAND() LIMIT 50;
+    EOF
+  }
+
   describe '#split_raw_slow_logs' do
     context 'MySQL' do
       let(:split_log) { parser.split_raw_slow_logs(mysql_raw_slow_logs) }
@@ -69,6 +87,10 @@ FROM
     context 'Percona' do
       let(:split_log) { parser.split_raw_slow_logs(percona_raw_slow_logs) }
       it { expect(split_log.size).to eq(2) }
+    end
+    context 'Percona without Schema' do
+      let(:split_log_without_Schema) { parser.split_raw_slow_logs(percona_raw_slow_logs_without_Schema) }
+      it { expect(split_log_without_Schema.size).to eq(1) }
     end
   end
 
@@ -127,6 +149,31 @@ FROM
             bytes_sent: 802732,
             sql: "SELECT\n        *\nFROM\n        sbtest"
           }
+        ])
+      end
+    end
+
+    context 'Percona without Schema' do
+      let(:split_log_without_Schema) { parser.split_raw_slow_logs(percona_raw_slow_logs_without_Schema) }
+      let(:parsed_logs_without_Schema) { split_log_without_Schema.map { |l| parser.parse_slow_log(l) } }
+
+      it { expect(parsed_logs_without_Schema.size).to eq(1) }
+      it do
+        expect(parsed_logs_without_Schema).to eq([
+          {
+            datetime: 1347508701, user: 'root', host: 'localhost',
+            thread_id: 45, schema: nil, last_errno: 0, killed: 0,
+            query_time: 34.45236, lock_time: 0.000134, rows_sent: 50, rows_examined: 8800050, rows_affected: 0, rows_read: 50,
+            bytes_sent: 3499, tmp_tables: 1, tmp_disk_tables: 1, tmp_table_sizes: 2450800000,
+            innodb_trx_id: 'B08',
+            qc_hit: 'No',
+            full_scan: 'Yes', full_join: 'No', tmp_table: 'Yes', tmp_table_on_disk: 'Yes',
+            filesort: 'Yes', filesort_on_disk: 'Yes', merge_passes: 202,
+            innodb_io_r_ops: 58994, innodb_io_r_bytes: 966557696, innodb_io_r_wait: 8.327283,
+            innodb_rec_lock_wait: 0.0, innodb_queue_wait: 0.0, 
+            innodb_pages_distinct: 60281,
+            sql: 'SELECT * FROM sbtest ORDER BY RAND() LIMIT 50'
+          },
         ])
       end
     end

@@ -3,10 +3,10 @@ require 'net/http'
 require 'uri'
 require 'json'
 require 'active_support/core_ext'
+require 'mysql-slowquery-parser'
 require 'nata2/client'
 require 'nata2/client/db'
 require 'nata2/client/slow_log_aggregator'
-require 'nata2/client/parser'
 require 'nata2/client/config'
 
 class Nata2::Client
@@ -63,9 +63,9 @@ class Nata2::Client
     def process(last_db, raw_slow_logs, long_query_time, processed_lines)
       sqlite.transaction
       begin
-        Parser.split_raw_slow_logs(raw_slow_logs).each do |raw_slow_log|
+        parser.split_raw_slow_logs(raw_slow_logs).each do |raw_slow_log|
           processed_lines = processed_lines + raw_slow_log.size
-          parsed_slow_log = Parser.parse_slow_log(raw_slow_log)
+          parsed_slow_log = parser.parse_slow_log(raw_slow_log)
 
           # どのデータベースへのクエリだったのかを明示
           if !parsed_slow_log[:db]
@@ -122,6 +122,10 @@ class Nata2::Client
 
     def logger
       @logger ||= Logger.new(Dir.tmpdir + '/nata-client.log', 10)
+    end
+
+    def parser
+      MySQLSlowQueryParser
     end
 
     def post_nata2(slowlog)
